@@ -1,0 +1,9 @@
+POST http://localhost:3003/api/blogs
+content-type: application/json
+
+{
+  "title": "Tilintarkastus eilen, tänään ja huomenna",
+  "author": "P.K.",
+  "url": "http://google.fi",
+  "likes": 0
+}
