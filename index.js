@@ -5,27 +5,15 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const blogsRouter = require('./controllers/blogs')
+const config = require('./utils/config')
 
 app.use(cors())
 app.use(bodyParser.json())
 
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config()
-}
-
-const MONGO_USER = process.env.MONGO_USER
-const MONGO_PASS = process.env.MONGO_PASS
-
-// Production: MONGO_DB = ds253783.mlab.com:53783/persons
-// Development: MONGO_DB = ds111370.mlab.com:11370/markus-db
-const MONGO_DB = process.env.MONGO_DB
-
-const mongoUrl = `mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_DB}`
-
 mongoose
-  .connect(mongoUrl, { useNewUrlParser: true })
+  .connect(config.mongoUrl, { useNewUrlParser: true })
   .then( () => {
-    console.log('connected to database', MONGO_DB)
+    console.log('connected to database', config.mongoUrl)
   })
   .catch( err => {
     console.log(err)
@@ -33,7 +21,16 @@ mongoose
 
 app.use('/api/blogs', blogsRouter)
 
-const PORT = 3003
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+const server = http.createServer(app)
+
+server.listen(config.port, () => {
+  console.log(`Server running on port ${config.port}`)
 })
+
+server.on('close', () => {
+  mongoose.connection.close()
+})
+
+module.exports = {
+  app, server
+}
