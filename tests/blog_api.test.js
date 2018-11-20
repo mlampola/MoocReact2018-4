@@ -63,32 +63,6 @@ describe('blog API - POST', () => {
     expect(titles).toContain(newBlog.title)
   })
 
-  test('a blog without likes can be added and likes is initialized', async () => {
-    const newBlog = {
-      title: 'How to post blogs, part 2',
-      author: "Markus Lampola",
-      url: "http://google.com/",
-    }
-
-    const intialBlogs = await api
-      .get('/api/blogs')
-
-    await api
-      .post('/api/blogs')
-      .send(newBlog)
-      .expect(201)
-      .expect('Content-Type', /application\/json/)
-
-    const response = await api
-      .get('/api/blogs')
-
-    const titles = response.body.map(r => r.title)
-
-    expect(response.body.length).toBe(intialBlogs.body.length + 1)
-    expect(titles).toContain(newBlog.title)
-    expect(response.body.find(b => b.title === newBlog.title).likes).toBe(0)
-  })
-
   test('blog without title is not added ', async () => {
     const newBlog = {
       author: "Markus Lampola",
@@ -150,6 +124,34 @@ describe('blog API - POST', () => {
       .get('/api/blogs')
 
     expect(response.body.length).toBe(intialBlogs.body.length)
+  })
+})
+
+describe('posting a blog without likes', () => {
+  test('the blog can be added and likes is initialized', async () => {
+    const newBlog = {
+      title: 'How to post blogs, part 2',
+      author: "Markus Lampola",
+      url: "http://google.com/",
+    }
+
+    const intialBlogs = await api
+      .get('/api/blogs')
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const response = await api
+      .get('/api/blogs')
+
+    const titles = response.body.map(r => r.title)
+
+    expect(response.body.length).toBe(intialBlogs.body.length + 1)
+    expect(titles).toContain(newBlog.title)
+    expect(response.body.find(b => b.title === newBlog.title).likes).toBe(0)
   })
 })
 
