@@ -1,8 +1,8 @@
 const listHelper = require('../utils/list_helper')
-const testBlogs = require('./test_blogs')
+const {initialBlogs} = require('./test_helper')
 
 describe('total likes', () => {
-  const listWithOneBlog = [testBlogs[1]]
+  const listWithOneBlog = [initialBlogs[1]]
 
   test('of an empty list equals 0', () => {
     const result = listHelper.totalLikes([])
@@ -15,7 +15,7 @@ describe('total likes', () => {
   })
 
   test('of a list with many blogs is calculated right', () => {
-    const result = listHelper.totalLikes(testBlogs)
+    const result = listHelper.totalLikes(initialBlogs)
     expect(result).toBe(36)
   })
 })
@@ -23,7 +23,7 @@ describe('total likes', () => {
 describe('favorite blog', () => {
 
   test('is found correctly', () => {
-    const result = listHelper.favoriteBlog(testBlogs)
+    const result = listHelper.favoriteBlog(initialBlogs)
     expect(result.title).toEqual('Canonical string reduction')
     expect(result.author).toEqual('Edsger W. Dijkstra')
     expect(result.likes).toBe(12)
@@ -38,7 +38,7 @@ describe('favorite blog', () => {
 describe('author with most blogs', () => {
 
   test('is found correctly', () => {
-    const result = listHelper.mostBlogs(testBlogs)
+    const result = listHelper.mostBlogs(initialBlogs)
     expect(result.author).toEqual('Robert C. Martin')
     expect(result.blogs).toBe(3)
   })
@@ -52,7 +52,7 @@ describe('author with most blogs', () => {
 describe('author with most likes', () => {
 
   test('is found correctly', () => {
-    const result = listHelper.mostLikes(testBlogs)
+    const result = listHelper.mostLikes(initialBlogs)
     expect(result.author).toEqual('Edsger W. Dijkstra')
     expect(result.likes).toBe(17)
   })
