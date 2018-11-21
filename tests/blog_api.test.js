@@ -155,6 +155,27 @@ describe('blog API - DELETE', () => {
   })
 })
 
+describe('blog API - UPDATE', () => {
+  test('the blog can be updated', async () => {
+    const blogsAtStart = await blogsInDb()
+    const blogToBeUpdated = blogsAtStart[0]
+    const likesAtStart = blogToBeUpdated.likes
+    console.log(likesAtStart)
+    ++blogToBeUpdated.likes
+    console.log(likesAtStart)
+
+    await api
+      .put(`/api/blogs/${blogToBeUpdated.id}`)
+      .send(blogToBeUpdated)
+      .expect(200)
+
+    const blogsAfterOperation = await blogsInDb()
+    const updatedBlog = blogsAfterOperation[0]
+    expect(blogsAfterOperation.length).toBe(blogsAtStart.length)
+    expect(updatedBlog.likes).toBe(likesAtStart + 1)
+  })
+})
+
 afterAll(() => {
   server.close()
 })
