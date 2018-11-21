@@ -138,6 +138,23 @@ describe('posting a blog without likes', () => {
   })
 })
 
+describe('blog API - DELETE', () => {
+  test('the blog can be deleted', async () => {
+    const blogsAtStart = await blogsInDb()
+    const blogToBeDeleted = blogsAtStart[blogsAtStart.length - 1]
+
+    await api
+      .delete(`/api/blogs/${blogToBeDeleted.id}`)
+      .expect(204)
+
+    const blogsAfterOperation = await blogsInDb()
+    expect(blogsAfterOperation.length).toBe(blogsAtStart.length - 1)
+
+    const titles = blogsAfterOperation.map(blog => blog.title)
+    expect(titles).not.toContain(blogToBeDeleted.title)
+  })
+})
+
 afterAll(() => {
   server.close()
 })
