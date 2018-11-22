@@ -2,13 +2,17 @@ const supertest = require('supertest')
 const { app, server } = require('../index')
 const api = supertest(app)
 const Blog = require('../models/blog')
-const { format, initialBlogs, blogsInDb } = require('./test_helper')
+const User = require('../models/user')
+const { format, initialBlogs, blogsInDb, usersInDb } = require('./test_helper')
 
 beforeAll(async () => {
   await Blog.remove({})
-
   const blogs = initialBlogs.map(blog => new Blog(blog))
   await Promise.all(blogs.map(blog => blog.save()))
+
+  await User.remove({})
+  const user = new User({ username: 'root', password: 'sekret' })
+  await user.save()
 })
 
 describe('blog API - GET', () => {
@@ -173,6 +177,44 @@ describe('blog API - UPDATE', () => {
     const updatedBlog = blogsAfterOperation[0]
     expect(blogsAfterOperation.length).toBe(blogsAtStart.length)
     expect(updatedBlog.likes).toBe(likesAtStart + 1)
+  })
+})
+
+describe('user API', async () => {
+  test('POST /api/users succeeds with a fresh username', async () => {
+    const usersBeforeOperation = await usersInDb()
+
+    const newUser = {
+      username: 'mluukkai',
+      name: 'Matti Luukkainen',
+      adult: true,
+      password: 'salainen'
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const usersAfterOperation = await usersInDb()
+    expect(usersAfterOperation.length).toBe(usersBeforeOperation.length + 1)
+    const usernames = usersAfterOperation.map(u => u.username)
+    expect(usernames).toContain(newUser.username)
+  })
+  
+  test('all users are returned as json', async () => {
+    const usersInDatabase = await usersInDb()
+
+    const response = await api
+      .get('/api/users')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.length).toBe(usersInDatabase.length)
+
+    const usernames = response.body.map(user => user.username)
+    usersInDatabase.forEach(user => expect(usernames).toContain(user.username))
   })
 })
 
