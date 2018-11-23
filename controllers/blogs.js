@@ -1,6 +1,15 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
+
+const getTokenFrom = (request) => {
+  const authorization = request.get('authorization')
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    return authorization.substring(7)
+  }
+  return null
+}
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
@@ -10,32 +19,43 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response) => {
   let blog = new Blog(request.body)
 
-  if (blog.title === undefined) {
-    return response.status(400).json({ error: 'title missing' })
+  try {
+    const token = getTokenFrom(request)
+    const decodedToken = jwt.verify(token, process.env.BLOG_SECRET)
+
+    if (!token || !decodedToken.id) {
+      return response.status(401).json({ error: 'token missing or invalid' })
+    }
+
+    if (blog.title === undefined) {
+      return response.status(400).json({ error: 'title missing' })
+    }
+
+    if (blog.author === undefined) {
+      return response.status(400).json({ error: 'author missing' })
+    }
+
+    if (blog.url === undefined) {
+      return response.status(400).json({ error: 'url missing' })
+    }
+
+    if (blog.likes === undefined) {
+      blog.likes = 0;
+    }
+
+    const user = await User.findById(decodedToken.id)
+
+    blog.user = user._id
+    const savedBlog = await blog.save()
+
+    user.blogs = user.blogs.concat(savedBlog._id)
+    await user.save()
+
+    response.status(201).json(Blog.format(savedBlog))
+  } catch (exception) {
+    console.log(exception)
+    response.status(500).json({ error: 'Blog: something went wrong...' })
   }
-
-  if (blog.author === undefined) {
-    return response.status(400).json({ error: 'author missing' })
-  }
-
-  if (blog.url === undefined) {
-    return response.status(400).json({ error: 'url missing' })
-  }
-
-  if (blog.likes === undefined) {
-    blog.likes = 0;
-  }
-
-  const users = await User.find({}) // TODO: Use logged in user
-  user = users[0]
-
-  blog.user = user._id
-  const savedBlog = await blog.save()
-  
-  user.blogs = user.blogs.concat(savedBlog._id)
-  await user.save()
-
-  response.status(201).json(Blog.format(savedBlog))
 })
 
 blogsRouter.delete('/:id', async (request, response) => {
