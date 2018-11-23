@@ -202,7 +202,7 @@ describe('user API', async () => {
     const usernames = usersAfterOperation.map(u => u.username)
     expect(usernames).toContain(newUser.username)
   })
-  
+
   test('all users are returned as json', async () => {
     const usersInDatabase = await usersInDb()
 
@@ -215,6 +215,73 @@ describe('user API', async () => {
 
     const usernames = response.body.map(user => user.username)
     usersInDatabase.forEach(user => expect(usernames).toContain(user.username))
+  })
+})
+
+describe('user API - validation', async () => {
+  test('POST /api/users fails with proper statuscode and message if username already taken', async () => {
+    const usersBeforeOperation = await usersInDb()
+
+    const newUser = {
+      username: 'root',
+      name: 'Superuser',
+      password: 'salainen'
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(result.body).toEqual({ error: 'username must be unique' })
+
+    const usersAfterOperation = await usersInDb()
+    expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
+  })
+
+  test('POST /api/users fails with proper statuscode and message if password is too short', async () => {
+    const usersBeforeOperation = await usersInDb()
+
+    const newUser = {
+      username: 'mlampola',
+      name: 'Markus Lampola',
+      password: 'sa'
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(result.body).toEqual({ error: 'password must contain at least 3 characters' })
+
+    const usersAfterOperation = await usersInDb()
+    expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
+  })
+
+  test('the user can be added and adult is initialized', async () => {
+    const usersBeforeOperation = await usersInDb()
+
+    const newUser = {
+      username: 'lampola',
+      name: 'Markus T. Lampola',
+      password: 'salakala'
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const usersAfterOperation = await usersInDb()
+
+    expect(usersAfterOperation.length).toBe(usersBeforeOperation.length + 1)
+    const usernames = usersAfterOperation.map(u => u.username)
+    expect(usernames).toContain(newUser.username)
+    expect(usersAfterOperation.find(u => u.username === newUser.username).adult).toBe(true)
   })
 })
 
