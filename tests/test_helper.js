@@ -52,24 +52,14 @@ const initialBlogs  = [
   }
 ]
 
-const format = (blog) => {
-  return {
-    title: blog.title,
-    author: blog.author,
-    url: blog.url,
-    likes: blog.likes,
-    id: blog._id
-  }
-}
-
 const blogsInDb = async () => {
   const blogs = await Blog.find({})
-  return blogs.map(format)
+  return blogs.map(Blog.format)
 }
 
 const usersInDb = async () => {
   const users = await User.find({})
-  return users
+  return users.map(User.format)
 }
 
 module.exports = { initialBlogs, blogsInDb, usersInDb

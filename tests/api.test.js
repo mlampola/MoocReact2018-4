@@ -3,7 +3,7 @@ const { app, server } = require('../index')
 const api = supertest(app)
 const Blog = require('../models/blog')
 const User = require('../models/user')
-const { format, initialBlogs, blogsInDb, usersInDb } = require('./test_helper')
+const { initialBlogs, blogsInDb, usersInDb } = require('./test_helper')
 
 beforeAll(async () => {
   await Blog.remove({})
