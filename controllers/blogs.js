@@ -16,7 +16,7 @@ blogsRouter.post('/', async (request, response) => {
       return response.status(401).json({ error: 'token missing' })
     }
 
-  const decodedToken = jwt.verify(request.token, process.env.BLOG_SECRET)
+    const decodedToken = jwt.verify(request.token, process.env.BLOG_SECRET)
 
     if (!decodedToken.id) {
       return response.status(401).json({ error: 'token invalid' })
@@ -49,14 +49,40 @@ blogsRouter.post('/', async (request, response) => {
     response.status(201).json(Blog.format(savedBlog))
   } catch (exception) {
     console.log(exception)
-    response.status(500).json({ error: 'Blog: something went wrong...' })
+    response.status(500).json({ error: 'Blog: something went wrong in POST...' })
   }
 })
 
 blogsRouter.delete('/:id', async (request, response) => {
   const id = request.params.id
-  await Blog.findByIdAndRemove(id)
-  response.status(204).end()
+
+  try {
+    if (!request.token) {
+      return response.status(401).json({ error: 'token missing' })
+    }
+
+    const decodedToken = jwt.verify(request.token, process.env.BLOG_SECRET)
+
+    if (!decodedToken.id) {
+      return response.status(401).json({ error: 'token invalid' })
+    }
+
+    const blog = await Blog.findById(id)
+
+    if (blog === null) {
+      return response.status(404).json({ error: 'blog not found' })
+    }
+
+    if (blog.user.toString() === decodedToken.id) {
+      await Blog.findByIdAndRemove(id)
+      response.status(204).end()
+    } else {
+      return response.status(401).json({ error: 'only own blogs can be deleted' })
+    }
+  } catch (exception) {
+    console.log(exception)
+    response.status(500).json({ error: 'Blog: something went wrong in DELETE...' })
+  }
 })
 
 blogsRouter.put('/:id', async (request, response) => {
