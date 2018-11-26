@@ -73,7 +73,7 @@ blogsRouter.delete('/:id', async (request, response) => {
       return response.status(404).json({ error: 'blog not found' })
     }
 
-    if (blog.user.toString() === decodedToken.id) {
+    if (!blog.user || blog.user.toString() === decodedToken.id) {
       await Blog.findByIdAndRemove(id)
       response.status(204).end()
     } else {
@@ -90,7 +90,9 @@ blogsRouter.put('/:id', async (request, response) => {
   const blog = request.body
 
   try {
-    const savedBlog = await Blog.findByIdAndUpdate(id, blog, { new: true })
+    const savedBlog = await Blog
+      .findByIdAndUpdate(id, blog, { new: true })
+      .populate('user', { username: 1, name: 1 })
     response.json(Blog.format(savedBlog))
   } catch (error) {
     console.log(error)
